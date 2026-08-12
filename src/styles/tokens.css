@@ -1,0 +1,66 @@
+/* ============================================================
+   HH Goa 2026 — Centralized Design Tokens
+   Authoritative Color, Typography, and Layout Tokens.
+   ============================================================ */
+
+@font-face {
+  font-family: 'Imbue';
+  src: url('/assets/fonts/hh-font-1.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Victor Mono';
+  src: url('/assets/fonts/hh-font-2.woff2') format('woff2');
+  font-weight: 100 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+:root {
+  /* ── SECTION 5 COLOR TOKENS (EXACT HEX) ── */
+  --color-goa-green: #06402B;
+  --color-goa-green-dark: #043321;
+  --color-goa-green-light: #0A5A3D;
+  --color-hh-pink: #FF0080;
+  --color-goa-yellow: #E2F524;
+  --color-warm-paper: #FDF8F0;
+  --color-warm-paper-shadow: #E8DFC8;
+  --color-black: #0A0A0A;
+
+  /* ── Legacy Aliases ── */
+  --hh-pink: var(--color-hh-pink);
+  --hh-yellow: var(--color-goa-yellow);
+  --hh-green-forest: var(--color-goa-green);
+  --hh-cream: var(--color-warm-paper);
+  --hh-black: var(--color-black);
+  --hh-charcoal: #141414;
+  --hh-graphite: #2A2A2A;
+  --hh-slate: #888888;
+  --hh-white: #FAFAFA;
+
+  /* ── SECTION 4 TYPOGRAPHY SYSTEM ── */
+  --font-display: 'Anton', 'Archivo Black', 'Imbue', sans-serif;
+  --font-primary: 'Archivo', 'Inter', sans-serif;
+  --font-mono: 'Space Mono', 'Victor Mono', monospace;
+
+  /* ── Spacing Scale ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* ── Radii ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* ── Transitions ── */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+}
