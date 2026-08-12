@@ -238,7 +238,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--hh-slate);
+  color: #C0C8D8;
   padding: 10px 0;
   text-align: center;
   border-radius: var(--radius-sm);
@@ -285,20 +285,20 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  color: var(--hh-green-lime);
+  color: var(--hh-yellow);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-bottom: var(--space-1);
-  border-bottom: 1px solid rgba(154, 201, 95, 0.15);
+  border-bottom: 1px solid rgba(226, 245, 36, 0.25);
 }
 
 .controls-subtitle {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--hh-slate);
+  color: #B4C0D0;
   margin-top: 2px;
   line-height: 1.4;
 }
@@ -455,11 +455,12 @@
 
 .form-label {
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--hh-slate);
+  font-size: 11px;
+  font-weight: 600;
+  color: #D0D8E8;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .form-input, .form-select {

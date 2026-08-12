@@ -1,7 +1,7 @@
 /* ============================================================
    HH Goa 2026 — Authoritative Poster Canvas Renderer
    Single shared renderer function for Live Preview & PNG Export.
-   Canvas resolution: 2160 × 2700 px (4:5 Portrait).
+   Canvas resolution: 2160 × 2700 px (4:5 Portrait) & 3840 x 2160 (16:9 Landscape).
    ============================================================ */
 
 import { getCachedImage, loadImage } from './imageLoader.js';
@@ -9,6 +9,7 @@ import { loadHackerHouseLogo } from './assets.js';
 import { getPersonAlphaImage, buildPaperCutoutLayer } from './paperCutout.js';
 import { drawQRCodeOnCanvas } from './qrGenerator.js';
 import { formatQRPayload } from './identityData.js';
+import { getAssetUrl } from './assetPath.js';
 
 export const CANVAS_WIDTH = 2160;
 export const CANVAS_HEIGHT = 2700;
@@ -38,6 +39,7 @@ const ASSETS = {
   bgHackers: '/assets/backgrounds/hackers.png',
   bgPalms: '/assets/backgrounds/footer trees.png',
   logoHackerHouse: '/assets/logos/Hacker house.png',
+  logoHindi: '/assets/logos/goa_hindi.svg',
   logoEmblemYellow: '/assets/logos/036-vector-54-3934.svg',
   waveCurve: '/assets/decorations/2-47.svg',
   footerTrees: '/assets/backgrounds/footer trees.png'
@@ -125,7 +127,7 @@ async function renderIndividualPoster(canvas, data) {
     name, stack, role, builderClass, builderId, socialHandle
   };
 
-  // ── 1. BACKGROUND ──
+  // ── 1. BASE BACKGROUND & TROPICAL WALLPAPER ──
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
   bgGrad.addColorStop(0, COLORS.greenLight);
   bgGrad.addColorStop(0.55, COLORS.green);
@@ -151,7 +153,16 @@ async function renderIndividualPoster(canvas, data) {
     ctx.restore();
   }
 
-  // ── 2. HEADLINE: "HACKER HOUSE" (drawn BEFORE hero for natural overlap) ──
+  // ── 2. LEFT BAMBOO / PALM GRAPHIC (fill left vertical area) ──
+  const leftPalmImg = getCachedImage(ASSETS.bgPalms);
+  if (leftPalmImg) {
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.drawImage(leftPalmImg, -60, 160, 560, 1900);
+    ctx.restore();
+  }
+
+  // ── 3. HEADLINE: "HACKER HOUSE" (left aligned) ──
   ctx.save();
   ctx.font = `900 220px ${FONT_DISPLAY}`;
   ctx.fillStyle = COLORS.yellow;
@@ -162,10 +173,11 @@ async function renderIndividualPoster(canvas, data) {
   ctx.fillText('HOUSE', 120, 320);
   ctx.restore();
 
-  // ── 3. HACKER HOUSE REAL LOGO (top-right, 220×220 box) ──
+  // ── 4. TOP-RIGHT BRANDING: HACKER HOUSE LOGO + ENLARGED HINDI GOA MARK + 247 STUDIOS ──
+  // A. Hacker House Real Logo (moved slightly down to y:160)
   const logo = await loadHackerHouseLogo();
   if (logo) {
-    const lbX = 1820, lbY = 100, lbW = 220, lbH = 220;
+    const lbX = 1800, lbY = 160, lbW = 240, lbH = 240;
     const lW = logo.naturalWidth || logo.width || 300;
     const lH = logo.naturalHeight || logo.height || 100;
     const lScale = Math.min(lbW / lW, lbH / lH);
@@ -174,33 +186,44 @@ async function renderIndividualPoster(canvas, data) {
     ctx.drawImage(logo, lbX + (lbW - drawW) / 2, lbY + (lbH - drawH) / 2, drawW, drawH);
   }
 
-  // ── 3b. REAL 247 STUDIOS LOGO ASSET (placed in top-right empty space at 100% full opacity) ──
+  // E. Enlarged Hindi Goa Mark (placed close to Hacker House logo, filling middle-right)
+  const hindiLogo = getCachedImage(ASSETS.logoHindi);
+  if (hindiLogo) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(10, 10, 10, 0.45)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 8;
+    ctx.drawImage(hindiLogo, 1640, 150, 180, 180);
+    ctx.restore();
+  }
+
+  // D. Real 247 Studios Logo (100% full opacity, enlarged, sharp & clean in top-right)
   const studioLogo = getCachedImage(ASSETS.waveCurve);
   if (studioLogo) {
     ctx.save();
-    ctx.globalAlpha = 1.0; // 100% FULL OPACITY
+    ctx.globalAlpha = 1.0; // 100% opacity
     ctx.globalCompositeOperation = 'source-over';
-    const sBoxW = 400;
+    const sBoxW = 440;
     const sW = studioLogo.naturalWidth || studioLogo.width || 400;
     const sH = studioLogo.naturalHeight || studioLogo.height || 170;
     const scale = sBoxW / sW;
     const drawW = sW * scale;
     const drawH = sH * scale;
-    const drawX = 1640;
-    const drawY = 330;
+    const drawX = 1600;
+    const drawY = 370;
     ctx.drawImage(studioLogo, drawX, drawY, drawW, drawH);
     ctx.restore();
   }
 
-  // ── 4. GOA · 2026 PILL TAG (overlaps headline-to-hero transition) ──
+  // ── 5. GOA · 2026 PINK TAG (moved down to y:640 to intentionally overlap upper portrait/chest) ──
   drawRotatedTag(ctx, {
-    x: 140, y: 560, w: 520, h: 100, rotationDeg: -2,
+    x: 140, y: 640, w: 520, h: 100, rotationDeg: -2,
     fill: COLORS.pink, textColor: COLORS.paper,
     text: 'GOA · 2026', font: `800 46px ${FONT_PRIMARY}`,
     letterSpacing: 0.04, shadow: true
   });
 
-  // ── 5. HERO CUTOUT PERSON (NO FAINT 247 BACKGROUND STAMP OVERLAY) ──
+  // ── 6. HERO CUTOUT PERSON (NO FAINT 247 STAMP) ──
   let cutoutLayer = null;
   if (photoImg) {
     cutoutLayer = await getProcessedCutout(photoImg, monochrome);
@@ -217,21 +240,19 @@ async function renderIndividualPoster(canvas, data) {
 
     ctx.drawImage(layerCanvas, drawX, drawY, drawW, drawH);
   } else {
-    // Default vector silhouette placeholder (no rectangle)
     renderDefaultBuilderSilhouette(ctx, heroX + 150, heroY + 100, heroW - 300, heroH - 200);
   }
 
-  // ── 6. SPEECH BUBBLE ──
+  // ── 7. SPEECH BUBBLE ──
   if (speechText) {
     renderSpeechBubble(ctx, speechText, 1480, 820, 520, 280);
   }
 
   // ══════════════════════════════════════════════════════════
-  // 7. IDENTITY BLOCK — strict non-overlapping y-coordinates
-  // Left rail x=260, generous spacing between each element
+  // 8. IDENTITY BLOCK — strict non-overlapping y-coordinates
   // ══════════════════════════════════════════════════════════
 
-  // Step A: Role / Designation Pink Tag (y:2020, h:90, rotated -2°)
+  // Step A: Role Pink Tag (y:2020, h:90)
   drawRotatedTag(ctx, {
     x: 260, y: 2020, w: 720, h: 90, rotationDeg: -2,
     fill: COLORS.pink, textColor: COLORS.paper,
@@ -239,7 +260,7 @@ async function renderIndividualPoster(canvas, data) {
     font: `700 38px ${FONT_PRIMARY}`, letterSpacing: 0.05
   });
 
-  // Step B: Builder Name (y:2140, font 120px, baseline ~2260)
+  // Step B: Builder Name (y:2140, font 120px)
   const rawName = (name || 'KISHAN R').trim().toUpperCase();
   ctx.save();
   ctx.font = `900 120px ${FONT_DISPLAY}`;
@@ -249,7 +270,7 @@ async function renderIndividualPoster(canvas, data) {
   ctx.fillText(rawName, 260, 2250);
   ctx.restore();
 
-  // Step C: Stack Cream Strip (y:2310, h:85, rotated -1.5°)
+  // Step C: Stack Cream Strip (y:2310, h:85)
   drawRotatedTag(ctx, {
     x: 260, y: 2310, w: 940, h: 85, rotationDeg: -1.5,
     fill: COLORS.paper, textColor: COLORS.black,
@@ -281,7 +302,7 @@ async function renderIndividualPoster(canvas, data) {
   ctx.fillText('#FRAMEINGOA', 120, 2580);
   ctx.restore();
 
-  // ── 8. QR CODE STAMP (right side, independent column) ──
+  // ── 9. QR CODE STAMP (right side) ──
   const qrX = 1760, qrY = 2280, qrW = 280, qrH = 280;
   ctx.save();
   ctx.fillStyle = COLORS.paper;
@@ -298,13 +319,13 @@ async function renderIndividualPoster(canvas, data) {
     moduleColor: COLORS.black, bgColor: COLORS.paper, label: 'SCAN · VISIT', labelColor: COLORS.black
   });
 
-  // ── 9. GRAIN OVERLAY & CHECKERBOARD BORDER ──
+  // ── 10. GRAIN OVERLAY & CHECKERBOARD BORDER ──
   renderGrainOverlay(ctx, W, H);
   renderCheckerboardFrame(ctx, W, H);
 }
 
 // ══════════════════════════════════════════════════════════════
-// DEFAULT BUILDER SILHOUETTE VECTOR (NO RECTANGLE, NO FAINT 247)
+// DEFAULT BUILDER SILHOUETTE VECTOR (NO RECTANGLE)
 // ══════════════════════════════════════════════════════════════
 
 function renderDefaultBuilderSilhouette(ctx, x, y, w, h) {
@@ -373,11 +394,13 @@ async function renderCrewOf2Poster(canvas, data) {
   const members = data.members || [];
   const m1 = members[0] || {};
   const m2 = members[1] || {};
+  const bgChoice = data.bgChoice || 'agenda';
 
   const identityPayload = {
     mode: 'team', crewSize: 2, teamName, teamId, members: [m1, m2]
   };
 
+  // 1. BASE BACKGROUND & SELECTED WALLPAPER
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
   bgGrad.addColorStop(0, COLORS.greenLight);
   bgGrad.addColorStop(0.55, COLORS.green);
@@ -385,24 +408,71 @@ async function renderCrewOf2Poster(canvas, data) {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
+  let bgImgUrl = ASSETS.bgAgenda;
+  if (bgChoice === 'sunrise') bgImgUrl = ASSETS.bgSunrise;
+  else if (bgChoice === 'details') bgImgUrl = ASSETS.bgDetails;
+  else if (bgChoice === 'hackers') bgImgUrl = ASSETS.bgHackers;
+  else if (bgChoice === 'palms') bgImgUrl = ASSETS.bgPalms;
+
+  const bgImg = getCachedImage(bgImgUrl);
+  if (bgImg && bgChoice !== 'solid') {
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    const scale = Math.max(W / bgImg.naturalWidth, H / bgImg.naturalHeight);
+    const bw = bgImg.naturalWidth * scale;
+    const bh = bgImg.naturalHeight * scale;
+    ctx.drawImage(bgImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
+    ctx.restore();
+  }
+
+  // Bamboo artwork overlay
+  const leftPalmImg = getCachedImage(ASSETS.bgPalms);
+  if (leftPalmImg) {
+    ctx.save(); ctx.globalAlpha = 0.20;
+    ctx.drawImage(leftPalmImg, 60, 100, 600, 1900);
+    ctx.drawImage(leftPalmImg, W - 660, 100, 600, 1900);
+    ctx.restore();
+  }
+
+  // 2. BRANDING: Hacker House Logo, 247 Studios, Goa Hindi Emblem
+  const logo = await loadHackerHouseLogo();
+  if (logo) {
+    const lScale = Math.min(260 / logo.width, 260 / logo.height);
+    ctx.drawImage(logo, W - 340, 100, logo.width * lScale, logo.height * lScale);
+  }
+
+  const studioLogo = getCachedImage(ASSETS.waveCurve);
+  if (studioLogo) {
+    ctx.save(); ctx.globalAlpha = 1.0;
+    ctx.drawImage(studioLogo, W - 800, 100, 400, 160);
+    ctx.restore();
+  }
+
+  const hindiLogo = getCachedImage(ASSETS.logoHindi);
+  if (hindiLogo) {
+    ctx.drawImage(hindiLogo, 100, 100, 160, 160);
+  }
+
+  // 3. HEADER TYPOGRAPHY & CREW TITLE
   ctx.save();
-  ctx.font = `900 180px ${FONT_DISPLAY}`;
+  ctx.font = `900 160px ${FONT_DISPLAY}`;
   ctx.fillStyle = COLORS.yellow;
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.fillText('HACKER HOUSE GOA 2026', W / 2, 80);
+  ctx.fillText('HACKER HOUSE GOA 2026', W / 2, 70);
   ctx.restore();
 
-  ctx.save();
-  ctx.font = `800 100px ${FONT_PRIMARY}`;
-  ctx.fillStyle = COLORS.pink;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(teamName, W / 2, 310);
-  ctx.restore();
+  // Team Name Pink Tag
+  drawRotatedTag(ctx, {
+    x: W / 2 - 450, y: 250, w: 900, h: 90, rotationDeg: -1,
+    fill: COLORS.pink, textColor: COLORS.paper,
+    text: teamName, font: `800 52px ${FONT_PRIMARY}`, letterSpacing: 0.04
+  });
 
-  const fW = 1200, fH = 1350;
-  const f1X = (W / 2) - fW - 60;
-  const f2X = (W / 2) + 60;
-  const fY = 460;
+  // 4. PORTRAITS & MEMBER IDENTITY (VERTICALLY BALANCED)
+  const fW = 1250, fH = 1250;
+  const f1X = (W / 2) - fW - 70;
+  const f2X = (W / 2) + 70;
+  const fY = 390;
 
   async function drawCrewCutout(m, fX, fY, titleLabel) {
     let cutout = null;
@@ -415,15 +485,16 @@ async function renderCrewOf2Poster(canvas, data) {
       renderDefaultBuilderSilhouette(ctx, fX + 100, fY + 50, fW - 200, fH - 100);
     }
 
-    const metaY = fY + fH + 20;
+    const metaY = fY + fH + 10;
     ctx.save();
-    ctx.font = `800 64px ${FONT_PRIMARY}`;
+    ctx.font = `900 64px ${FONT_DISPLAY}`;
     ctx.fillStyle = COLORS.yellow; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText((m.name || titleLabel).toUpperCase(), fX + fW / 2, metaY);
+
     drawRotatedTag(ctx, {
-      x: fX + 200, y: metaY + 75, w: fW - 400, h: 54, rotationDeg: -1.5,
+      x: fX + 220, y: metaY + 75, w: fW - 440, h: 56, rotationDeg: -1.5,
       fill: COLORS.pink, textColor: COLORS.paper,
-      text: (m.stack || 'BUILDER').toUpperCase(), font: `700 28px ${FONT_PRIMARY}`,
+      text: (m.stack || 'BUILDER').toUpperCase(), font: `700 30px ${FONT_PRIMARY}`,
       letterSpacing: 0.04
     });
     ctx.restore();
@@ -432,8 +503,9 @@ async function renderCrewOf2Poster(canvas, data) {
   await drawCrewCutout(m1, f1X, fY, 'MEMBER 01');
   await drawCrewCutout(m2, f2X, fY, 'MEMBER 02');
 
-  drawQRCodeOnCanvas(ctx, formatQRPayload(identityPayload), W - 460, H - 460, 340, {
-    moduleColor: COLORS.black, bgColor: COLORS.paper, label: 'CREW', labelColor: COLORS.black
+  // Bottom QR Stamp & Checkerboard Frame
+  drawQRCodeOnCanvas(ctx, formatQRPayload(identityPayload), W - 440, H - 440, 320, {
+    moduleColor: COLORS.black, bgColor: COLORS.paper, label: 'CREW IDENTITY', labelColor: COLORS.black
   });
 
   renderGrainOverlay(ctx, W, H);
@@ -459,11 +531,13 @@ async function renderCrewOf3Poster(canvas, data) {
   const m1 = members[0] || {};
   const m2 = members[1] || {};
   const m3 = members[2] || {};
+  const bgChoice = data.bgChoice || 'agenda';
 
   const identityPayload = {
     mode: 'team', crewSize: 3, teamName, teamId, members: [m1, m2, m3]
   };
 
+  // 1. BASE BACKGROUND & SELECTED WALLPAPER
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
   bgGrad.addColorStop(0, COLORS.greenLight);
   bgGrad.addColorStop(0.55, COLORS.green);
@@ -471,25 +545,65 @@ async function renderCrewOf3Poster(canvas, data) {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
+  let bgImgUrl = ASSETS.bgAgenda;
+  if (bgChoice === 'sunrise') bgImgUrl = ASSETS.bgSunrise;
+  else if (bgChoice === 'details') bgImgUrl = ASSETS.bgDetails;
+  else if (bgChoice === 'hackers') bgImgUrl = ASSETS.bgHackers;
+  else if (bgChoice === 'palms') bgImgUrl = ASSETS.bgPalms;
+
+  const bgImg = getCachedImage(bgImgUrl);
+  if (bgImg && bgChoice !== 'solid') {
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    const scale = Math.max(W / bgImg.naturalWidth, H / bgImg.naturalHeight);
+    const bw = bgImg.naturalWidth * scale;
+    const bh = bgImg.naturalHeight * scale;
+    ctx.drawImage(bgImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
+    ctx.restore();
+  }
+
+  // Bamboo artwork
+  const leftPalmImg = getCachedImage(ASSETS.bgPalms);
+  if (leftPalmImg) {
+    ctx.save(); ctx.globalAlpha = 0.20;
+    ctx.drawImage(leftPalmImg, -40, 160, 520, 1900);
+    ctx.restore();
+  }
+
+  // 2. BRANDING: Hacker House Logo + 247 Studios Logo (top-right)
+  const logo = await loadHackerHouseLogo();
+  if (logo) {
+    const lScale = Math.min(220 / logo.width, 220 / logo.height);
+    ctx.drawImage(logo, W - 300, 110, logo.width * lScale, logo.height * lScale);
+  }
+
+  const studioLogo = getCachedImage(ASSETS.waveCurve);
+  if (studioLogo) {
+    ctx.save(); ctx.globalAlpha = 1.0;
+    ctx.drawImage(studioLogo, W - 720, 120, 380, 150);
+    ctx.restore();
+  }
+
+  // 3. HEADER TYPOGRAPHY & TEAM NAME
   ctx.save();
-  ctx.font = `900 160px ${FONT_DISPLAY}`;
+  ctx.font = `900 150px ${FONT_DISPLAY}`;
   ctx.fillStyle = COLORS.yellow;
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.fillText('HACKER HOUSE GOA', W / 2, 100);
+  ctx.fillText('HACKER HOUSE GOA', W / 2, 90);
   ctx.restore();
 
-  ctx.save();
-  ctx.font = `800 84px ${FONT_PRIMARY}`;
-  ctx.fillStyle = COLORS.pink;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(teamName, W / 2, 300);
-  ctx.restore();
+  drawRotatedTag(ctx, {
+    x: W / 2 - 400, y: 260, w: 800, h: 80, rotationDeg: -1.5,
+    fill: COLORS.pink, textColor: COLORS.paper,
+    text: teamName, font: `800 44px ${FONT_PRIMARY}`, letterSpacing: 0.04
+  });
 
-  const fW = 640, fH = 880;
-  const spacing = 30;
+  // 4. THREE MEMBER CUTOUTS & IDENTITY (VERTICALLY FILLING POSTER SPACE)
+  const fW = 630, fH = 1350; // Generous height filling space!
+  const spacing = 35;
   const totalW = fW * 3 + spacing * 2;
   const startX = (W - totalW) / 2;
-  const fY = 440;
+  const fY = 380;
 
   async function drawCrew3Cutout(m, fX, fY, titleLabel) {
     let cutout = null;
@@ -502,13 +616,14 @@ async function renderCrewOf3Poster(canvas, data) {
       renderDefaultBuilderSilhouette(ctx, fX + 40, fY + 30, fW - 80, fH - 60);
     }
 
-    const metaY = fY + fH + 20;
+    const metaY = fY + fH + 15;
     ctx.save();
-    ctx.font = `800 48px ${FONT_PRIMARY}`;
+    ctx.font = `900 52px ${FONT_DISPLAY}`;
     ctx.fillStyle = COLORS.yellow; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText((m.name || titleLabel).toUpperCase(), fX + fW / 2, metaY);
+
     drawRotatedTag(ctx, {
-      x: fX + 60, y: metaY + 54, w: fW - 120, h: 44, rotationDeg: -1.5,
+      x: fX + 50, y: metaY + 65, w: fW - 100, h: 48, rotationDeg: -1.5,
       fill: COLORS.pink, textColor: COLORS.paper,
       text: (m.stack || 'BUILDER').toUpperCase(), font: `700 24px ${FONT_PRIMARY}`,
       letterSpacing: 0.04
@@ -520,8 +635,32 @@ async function renderCrewOf3Poster(canvas, data) {
   await drawCrew3Cutout(m2, startX + fW + spacing, fY, 'MEMBER 02');
   await drawCrew3Cutout(m3, startX + (fW + spacing) * 2, fY, 'MEMBER 03');
 
+  // Dedicated Team ID Tag
+  ctx.save();
+  const idX = 120, idY = 2440, idW = 600, idH = 60;
+  ctx.fillStyle = COLORS.black;
+  drawRoundedRect(ctx, idX, idY, idW, idH, 10);
+  ctx.fill();
+  ctx.strokeStyle = COLORS.yellow;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.font = `700 28px ${FONT_MONO}`;
+  ctx.fillStyle = COLORS.yellow;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(`TEAM ID: ${(teamId || 'HH-GOA-26-CREW-7K2P').toUpperCase()}`, idX + idW / 2, idY + idH / 2 + 1);
+  ctx.restore();
+
+  // Footer Tag
+  ctx.save();
+  ctx.font = `500 30px ${FONT_MONO}`;
+  ctx.fillStyle = COLORS.paper;
+  ctx.globalAlpha = 0.7;
+  ctx.fillText('#FRAMEINGOA', 120, 2580);
+  ctx.restore();
+
+  // QR Code Stamp
   drawQRCodeOnCanvas(ctx, formatQRPayload(identityPayload), W - 140 - 280, H - 420, 280, {
-    moduleColor: COLORS.black, bgColor: COLORS.paper, label: '#FrameInGoa', labelColor: COLORS.black
+    moduleColor: COLORS.black, bgColor: COLORS.paper, label: 'CREW IDENTITY', labelColor: COLORS.black
   });
 
   renderGrainOverlay(ctx, W, H);
