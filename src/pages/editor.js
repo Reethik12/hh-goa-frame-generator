@@ -10,6 +10,7 @@ import { createIdentityPayload, createTeamPayload } from '../utils/identityData.
 import { generateCaption, getTemplateCount, MANDATORY_HASHTAG } from '../utils/captionEngine.js';
 import { renderCardCanvas, preloadStyle1Assets } from '../utils/canvasRenderer.js';
 import { renderLanding } from './landing.js';
+import { getAssetUrl } from '../utils/assetPath.js';
 
 // Predefined Builder Classes
 const BUILDER_CLASSES = [
@@ -18,11 +19,11 @@ const BUILDER_CLASSES = [
 
 // Background choices with thumbnails
 const BACKGROUNDS = [
-  { id: 'agenda', name: 'Goa Villa', thumb: '/assets/backgrounds/agenda.png', previewColor: '#06402B' },
-  { id: 'details', name: 'Coastal Sand', thumb: '/assets/backgrounds/details.png', previewColor: '#FDF8F0' },
-  { id: 'sunrise', name: 'Goa Sunrise', thumb: '/assets/backgrounds/Sun rise.png', previewColor: '#FEE101' },
-  { id: 'hackers', name: 'Hacker Room', thumb: '/assets/backgrounds/hackers.png', previewColor: '#1A1A1A' },
-  { id: 'palms', name: 'Tropical Palms', thumb: '/assets/backgrounds/footer trees.png', previewColor: '#0B6839' }
+  { id: 'agenda', name: 'Goa Villa', thumb: getAssetUrl('/assets/backgrounds/agenda.png'), previewColor: '#06402B' },
+  { id: 'details', name: 'Coastal Sand', thumb: getAssetUrl('/assets/backgrounds/details.png'), previewColor: '#FDF8F0' },
+  { id: 'sunrise', name: 'Goa Sunrise', thumb: getAssetUrl('/assets/backgrounds/Sun rise.png'), previewColor: '#FEE101' },
+  { id: 'hackers', name: 'Hacker Room', thumb: getAssetUrl('/assets/backgrounds/hackers.png'), previewColor: '#1A1A1A' },
+  { id: 'palms', name: 'Tropical Palms', thumb: getAssetUrl('/assets/backgrounds/footer trees.png'), previewColor: '#0B6839' }
 ];
 
 /** Floating toast notification. */
@@ -130,7 +131,7 @@ export async function renderEditor(container) {
       <!-- Top Navigation -->
       <nav class="editor-nav">
         <div class="editor-nav-brand">
-          <img src="/assets/logos/Hacker house.png" alt="HH Logo" />
+          <img src="${getAssetUrl('/assets/logos/Hacker house.png')}" alt="HH Logo" />
           <span>BUILDER POSTER STUDIO</span>
         </div>
 

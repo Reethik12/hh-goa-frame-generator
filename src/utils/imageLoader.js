@@ -4,6 +4,8 @@
    canvas rendering.
    ============================================================ */
 
+import { getAssetUrl } from './assetPath.js';
+
 const cache = new Map();
 
 /**
@@ -12,6 +14,9 @@ const cache = new Map();
  * @returns {Promise<HTMLImageElement>}
  */
 export function loadImage(src) {
+  if (!src) return Promise.reject(new Error('No src provided'));
+  const resolvedSrc = getAssetUrl(src);
+
   if (cache.has(src)) {
     const cached = cache.get(src);
     if (cached.complete && cached.naturalWidth > 0) {
@@ -21,18 +26,19 @@ export function loadImage(src) {
 
   return new Promise((resolve, reject) => {
     const img = new Image();
-    if (src.startsWith('http://') || src.startsWith('https://')) {
+    if (resolvedSrc.startsWith('http://') || resolvedSrc.startsWith('https://')) {
       img.crossOrigin = 'anonymous';
     }
     img.onload = () => {
       cache.set(src, img);
+      cache.set(resolvedSrc, img);
       resolve(img);
     };
     img.onerror = (err) => {
-      console.warn(`Failed to load asset image: ${src}`, err);
+      console.warn(`Failed to load asset image: ${resolvedSrc}`, err);
       reject(err);
     };
-    img.src = src;
+    img.src = resolvedSrc;
   });
 }
 
@@ -51,7 +57,8 @@ export function preloadImages(urls) {
  * @returns {HTMLImageElement|null}
  */
 export function getCachedImage(src) {
-  const cached = cache.get(src);
+  const resolvedSrc = getAssetUrl(src);
+  const cached = cache.get(src) || cache.get(resolvedSrc);
   if (cached && cached.complete && cached.naturalWidth > 0) {
     return cached;
   }

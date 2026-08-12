@@ -7,6 +7,8 @@
    4. IDENTITY: Builder, Passport, ID Badge, Architect, Core, Founder, Verified, Crew
    ============================================================ */
 
+import { getAssetUrl } from './assetPath.js';
+
 export const STICKER_CATEGORIES = ['GOA', 'HACKER', 'FUN', 'IDENTITY'];
 
 export const STICKER_LIBRARY = [
@@ -16,7 +18,7 @@ export const STICKER_LIBRARY = [
     name: 'Goa Hindi',
     category: 'GOA',
     svgIcon: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#0B6839" stroke-width="2.5"/><text x="20" y="25" text-anchor="middle" font-size="13" fill="#0B6839" font-weight="800">गोआ</text></svg>',
-    assetUrl: '/assets/logos/goa_hindi.svg'
+    assetUrl: getAssetUrl('/assets/logos/goa_hindi.svg')
   },
   {
     id: 'palm_tree',
@@ -35,7 +37,7 @@ export const STICKER_LIBRARY = [
     name: 'Ocean Wave',
     category: 'GOA',
     svgIcon: '<svg viewBox="0 0 40 40"><path d="M4 22q4-7 8 0t8 0 8 0 8 0" fill="none" stroke="#9AC95F" stroke-width="3" stroke-linecap="round"/></svg>',
-    assetUrl: '/assets/decorations/2-47.svg'
+    assetUrl: getAssetUrl('/assets/decorations/2-47.svg')
   },
   {
     id: 'beach_umbrella',
@@ -54,7 +56,7 @@ export const STICKER_LIBRARY = [
     name: 'Goa Stamp',
     category: 'GOA',
     svgIcon: '<svg viewBox="0 0 40 40"><rect x="6" y="8" width="28" height="24" rx="4" fill="#EDD723" stroke="#0A0A0A" stroke-width="2"/><text x="20" y="24" text-anchor="middle" font-size="10" fill="#0A0A0A" font-weight="800">GOA 26</text></svg>',
-    assetUrl: '/assets/stickers/182-frame-1948754788-54-30962.svg'
+    assetUrl: getAssetUrl('/assets/stickers/182-frame-1948754788-54-30962.svg')
   },
   {
     id: 'goa_map',
@@ -69,14 +71,14 @@ export const STICKER_LIBRARY = [
     name: 'HH Pink Emblem',
     category: 'HACKER',
     svgIcon: '<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="4" fill="none" stroke="#FF0080" stroke-width="2.5"/><text x="20" y="25" text-anchor="middle" font-size="14" fill="#FF0080" font-weight="800">HH</text></svg>',
-    assetUrl: '/assets/logos/179-vector-54-30944.svg'
+    assetUrl: getAssetUrl('/assets/logos/179-vector-54-30944.svg')
   },
   {
     id: 'hh_emblem_yellow',
     name: 'HH Yellow Emblem',
     category: 'HACKER',
     svgIcon: '<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="4" fill="#EDD723" stroke="#0A0A0A" stroke-width="2"/><text x="20" y="25" text-anchor="middle" font-size="14" fill="#0A0A0A" font-weight="800">HH</text></svg>',
-    assetUrl: '/assets/logos/036-vector-54-3934.svg'
+    assetUrl: getAssetUrl('/assets/logos/036-vector-54-3934.svg')
   },
   {
     id: 'terminal_icon',
@@ -127,7 +129,7 @@ export const STICKER_LIBRARY = [
     name: 'Glitter Star',
     category: 'FUN',
     svgIcon: '<svg viewBox="0 0 40 40"><path d="M20 4l4.5 11H36l-9 7 3.5 11L20 26l-10.5 7 3.5-11-9-7h11.5z" fill="#EDD723" stroke="#0A0A0A" stroke-width="1"/></svg>',
-    assetUrl: '/assets/decorations/181-frame-1948754789-54-30958.svg'
+    assetUrl: getAssetUrl('/assets/decorations/181-frame-1948754789-54-30958.svg')
   },
   {
     id: 'sparkle',

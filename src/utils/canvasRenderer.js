@@ -174,6 +174,24 @@ async function renderIndividualPoster(canvas, data) {
     ctx.drawImage(logo, lbX + (lbW - drawW) / 2, lbY + (lbH - drawH) / 2, drawW, drawH);
   }
 
+  // ── 3b. REAL 247 STUDIOS LOGO ASSET (placed in top-right empty space at 100% full opacity) ──
+  const studioLogo = getCachedImage(ASSETS.waveCurve);
+  if (studioLogo) {
+    ctx.save();
+    ctx.globalAlpha = 1.0; // 100% FULL OPACITY
+    ctx.globalCompositeOperation = 'source-over';
+    const sBoxW = 400;
+    const sW = studioLogo.naturalWidth || studioLogo.width || 400;
+    const sH = studioLogo.naturalHeight || studioLogo.height || 170;
+    const scale = sBoxW / sW;
+    const drawW = sW * scale;
+    const drawH = sH * scale;
+    const drawX = 1640;
+    const drawY = 330;
+    ctx.drawImage(studioLogo, drawX, drawY, drawW, drawH);
+    ctx.restore();
+  }
+
   // ── 4. GOA · 2026 PILL TAG (overlaps headline-to-hero transition) ──
   drawRotatedTag(ctx, {
     x: 140, y: 560, w: 520, h: 100, rotationDeg: -2,
@@ -182,7 +200,7 @@ async function renderIndividualPoster(canvas, data) {
     letterSpacing: 0.04, shadow: true
   });
 
-  // ── 5. HERO CUTOUT PERSON ──
+  // ── 5. HERO CUTOUT PERSON (NO FAINT 247 BACKGROUND STAMP OVERLAY) ──
   let cutoutLayer = null;
   if (photoImg) {
     cutoutLayer = await getProcessedCutout(photoImg, monochrome);
@@ -198,21 +216,6 @@ async function renderIndividualPoster(canvas, data) {
     const drawY = heroY + heroH - drawH; // anchor to bottom
 
     ctx.drawImage(layerCanvas, drawX, drawY, drawW, drawH);
-
-    // ── 5b. 2-47.svg OVERLAY AS SUBTLE STAMP on top of photo ──
-    const stampSvg = getCachedImage(ASSETS.waveCurve);
-    if (stampSvg) {
-      ctx.save();
-      ctx.globalAlpha = 0.10;
-      ctx.globalCompositeOperation = 'overlay';
-      // Center the stamp on the hero cutout area
-      const sW = heroW * 0.9;
-      const sH = sW * (stampSvg.naturalHeight / stampSvg.naturalWidth);
-      const sX = drawX + (drawW - sW) / 2;
-      const sY = drawY + drawH * 0.35;
-      ctx.drawImage(stampSvg, sX, sY, sW, sH);
-      ctx.restore();
-    }
   } else {
     // Default vector silhouette placeholder (no rectangle)
     renderDefaultBuilderSilhouette(ctx, heroX + 150, heroY + 100, heroW - 300, heroH - 200);
@@ -301,7 +304,7 @@ async function renderIndividualPoster(canvas, data) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// DEFAULT BUILDER SILHOUETTE VECTOR (NO RECTANGLE)
+// DEFAULT BUILDER SILHOUETTE VECTOR (NO RECTANGLE, NO FAINT 247)
 // ══════════════════════════════════════════════════════════════
 
 function renderDefaultBuilderSilhouette(ctx, x, y, w, h) {
@@ -339,16 +342,6 @@ function renderDefaultBuilderSilhouette(ctx, x, y, w, h) {
   ctx.lineTo(w * 0.85, h);
   ctx.closePath();
   ctx.fill();
-
-  // 2-47.svg stamp overlay on default silhouette too
-  const stampSvg = getCachedImage(ASSETS.waveCurve);
-  if (stampSvg) {
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.globalCompositeOperation = 'overlay';
-    ctx.drawImage(stampSvg, w * 0.05, h * 0.35, w * 0.9, h * 0.35);
-    ctx.restore();
-  }
 
   // Upload prompt text
   ctx.font = `700 42px ${FONT_PRIMARY}`;

@@ -4,6 +4,7 @@
    ============================================================ */
 
 import { renderEditor } from './editor.js';
+import { getAssetUrl } from '../utils/assetPath.js';
 
 /**
  * Check if user prefers reduced motion.
@@ -32,7 +33,7 @@ export function renderLanding(container) {
           playsinline
           preload="auto"
         >
-          <source src="/assets/video/Prehype.mp4" type="video/mp4" />
+          <source src="${getAssetUrl('/assets/video/Prehype.mp4')}" type="video/mp4" />
         </video>
       </div>
 
@@ -47,25 +48,25 @@ export function renderLanding(container) {
 
       <!-- Decorative: Ticker borders -->
       <div class="deco-ticker-top" aria-hidden="true">
-        <img src="/assets/decorations/138-frame-1948755142-54-27257.svg" alt="" loading="lazy" />
+        <img src="${getAssetUrl('/assets/decorations/138-frame-1948755142-54-27257.svg')}" alt="" loading="lazy" />
       </div>
       <div class="deco-ticker-bottom" aria-hidden="true">
-        <img src="/assets/decorations/140-frame-1948755145-54-27273.svg" alt="" loading="lazy" />
+        <img src="${getAssetUrl('/assets/decorations/140-frame-1948755145-54-27273.svg')}" alt="" loading="lazy" />
       </div>
 
       <!-- Decorative: Corner crosshair markers -->
-      <img class="deco-corner-marker top-left" src="/assets/decorations/180-frame-1948754793-54-30952.svg" alt="" aria-hidden="true" />
-      <img class="deco-corner-marker top-right" src="/assets/decorations/180-frame-1948754793-54-30952.svg" alt="" aria-hidden="true" />
-      <img class="deco-corner-marker bottom-left" src="/assets/decorations/180-frame-1948754793-54-30952.svg" alt="" aria-hidden="true" />
-      <img class="deco-corner-marker bottom-right" src="/assets/decorations/180-frame-1948754793-54-30952.svg" alt="" aria-hidden="true" />
+      <img class="deco-corner-marker top-left" src="${getAssetUrl('/assets/decorations/180-frame-1948754793-54-30952.svg')}" alt="" aria-hidden="true" />
+      <img class="deco-corner-marker top-right" src="${getAssetUrl('/assets/decorations/180-frame-1948754793-54-30952.svg')}" alt="" aria-hidden="true" />
+      <img class="deco-corner-marker bottom-left" src="${getAssetUrl('/assets/decorations/180-frame-1948754793-54-30952.svg')}" alt="" aria-hidden="true" />
+      <img class="deco-corner-marker bottom-right" src="${getAssetUrl('/assets/decorations/180-frame-1948754793-54-30952.svg')}" alt="" aria-hidden="true" />
 
       <!-- Decorative: Star accents -->
-      <img class="deco-star pos-1" src="/assets/decorations/181-frame-1948754789-54-30958.svg" alt="" aria-hidden="true" />
-      <img class="deco-star pos-2" src="/assets/decorations/181-frame-1948754789-54-30958.svg" alt="" aria-hidden="true" />
-      <img class="deco-star pos-3" src="/assets/decorations/181-frame-1948754789-54-30958.svg" alt="" aria-hidden="true" />
+      <img class="deco-star pos-1" src="${getAssetUrl('/assets/decorations/181-frame-1948754789-54-30958.svg')}" alt="" aria-hidden="true" />
+      <img class="deco-star pos-2" src="${getAssetUrl('/assets/decorations/181-frame-1948754789-54-30958.svg')}" alt="" aria-hidden="true" />
+      <img class="deco-star pos-3" src="${getAssetUrl('/assets/decorations/181-frame-1948754789-54-30958.svg')}" alt="" aria-hidden="true" />
 
       <!-- Decorative: Wave curve -->
-      <img class="deco-wave" src="/assets/decorations/2-47.svg" alt="" aria-hidden="true" loading="lazy" />
+      <img class="deco-wave" src="${getAssetUrl('/assets/decorations/2-47.svg')}" alt="" aria-hidden="true" loading="lazy" />
 
       <!-- Hero Content -->
       <section class="hero-content">
@@ -74,7 +75,7 @@ export function renderLanding(container) {
         <div class="hero-brand">
           <img
             class="hero-logo"
-            src="/assets/logos/Hacker house.png"
+            src="${getAssetUrl('/assets/logos/Hacker house.png')}"
             alt="Hacker House logo"
             width="480"
             height="99"
@@ -82,7 +83,7 @@ export function renderLanding(container) {
           <div class="hero-brand-row">
             <img
               class="hero-hindi-badge"
-              src="/assets/logos/goa_hindi.svg"
+              src="${getAssetUrl('/assets/logos/goa_hindi.svg')}"
               alt="Goa in Hindi script"
               width="48"
               height="48"
@@ -90,7 +91,7 @@ export function renderLanding(container) {
             <span class="hero-year-badge">GOA · 2026</span>
             <img
               class="hero-brand-emblem"
-              src="/assets/logos/036-vector-54-3934.svg"
+              src="${getAssetUrl('/assets/logos/036-vector-54-3934.svg')}"
               alt="HH brand emblem"
               width="40"
               height="35"
@@ -101,7 +102,7 @@ export function renderLanding(container) {
         <!-- Zigzag divider -->
         <img
           class="deco-zigzag above-cta"
-          src="/assets/decorations/002-group-54-14.svg"
+          src="${getAssetUrl('/assets/decorations/002-group-54-14.svg')}"
           alt=""
           aria-hidden="true"
         />
