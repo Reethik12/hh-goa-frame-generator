@@ -35,9 +35,10 @@ function showToast(container, message) {
     toast.className = 'toast-notification';
     container.appendChild(toast);
   }
-  toast.textContent = message;
+  toast.innerHTML = message.replace(/\n/g, '<br/>');
   toast.classList.add('is-visible');
-  setTimeout(() => toast.classList.remove('is-visible'), 2500);
+  const delay = message.includes('\n') ? 3500 : 2500;
+  setTimeout(() => toast.classList.remove('is-visible'), delay);
 }
 
 /**
@@ -693,6 +694,44 @@ export async function renderEditor(container) {
       }
     });
 
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && ('ontouchstart' in window));
+
+    /** Helper: Retrieve current File and Blob */
+    async function getShareFileAndBlob() {
+      if (preparedShareFile && preparedShareBlob) {
+        return { file: preparedShareFile, blob: preparedShareBlob };
+      }
+      const blob = await renderCurrentCardToBlob();
+      if (!blob) return { file: null, blob: null };
+      const filename = getSanitizedFilename();
+      const file = new File([blob], filename, { type: 'image/png' });
+      return { file, blob };
+    }
+
+    /** Helper: Attempt native file share sheet on mobile */
+    async function attemptNativeFileShare(caption) {
+      if (!navigator.share || !navigator.canShare) return false;
+      const { file } = await getShareFileAndBlob();
+      if (!file) return false;
+
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Hacker House Goa 2026',
+            text: caption,
+            files: [file]
+          });
+          showToast(container, '✓ Frame shared');
+          return true; // Successfully shared natively
+        } catch (err) {
+          if (err?.name === 'AbortError') {
+            return true; // User cancelled native share sheet — do nothing
+          }
+        }
+      }
+      return false;
+    }
+
     /** Helper: Copy caption to clipboard */
     function copySocialCaption() {
       const caption = getCaptionText();
@@ -720,75 +759,67 @@ export async function renderEditor(container) {
       return false;
     }
 
-    /** BUTTON 1 — X SHARE */
+    /** Core Social Action Orchestrator */
+    async function executeSocialPlatformShare(targetUrl, platformName) {
+      const caption = getCaptionText();
+
+      // STEP 2: Mobile First native file share attempt
+      if (isMobileDevice) {
+        const sharedNatively = await attemptNativeFileShare(caption);
+        if (sharedNatively) return;
+      }
+
+      // STEP 3 & STEP 4: Fallback Flow (Desktop or Mobile Fallback)
+      // 1. Download PNG
+      await downloadIdentityFrame();
+
+      // 2. Copy caption
+      copySocialCaption();
+
+      // 3. Open platform composer/page if URL is provided
+      if (targetUrl) {
+        window.location.href = targetUrl;
+      }
+
+      // 4. Instruction Toast
+      showToast(
+        container,
+        `📸 Frame downloaded\n📝 Caption copied — attach image to your ${platformName || 'post'}.`
+      );
+    }
+
+    /** PLATFORM 1 — 𝕏 Share */
     async function shareToX() {
       const caption = getCaptionText();
       const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(caption)}`;
-      
-      // Step 1: Download frame
-      downloadIdentityFrame();
-      
-      // Step 2: Copy caption
-      copySocialCaption();
-      
-      // Step 3: Open X composer
-      window.location.href = shareUrl;
-      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied — Opening X...');
+      executeSocialPlatformShare(shareUrl, '𝕏 post');
     }
 
-    /** BUTTON 2 — WHATSAPP */
+    /** PLATFORM 2 — WhatsApp */
     async function shareToWhatsApp() {
       const caption = getCaptionText();
       const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`;
-      
-      // Step 1: Download frame
-      downloadIdentityFrame();
-      
-      // Step 2: Copy caption
-      copySocialCaption();
-      
-      // Step 3: Open WhatsApp
-      window.location.href = shareUrl;
-      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied — Opening WhatsApp...');
+      executeSocialPlatformShare(shareUrl, 'WhatsApp message');
     }
 
-    /** BUTTON 3 — INSTAGRAM (NO Web Share sheet, direct download + copy + launch) */
+    /** PLATFORM 3 — Instagram */
     async function shareToInstagram() {
-      // Step 1: Download frame
-      downloadIdentityFrame();
-      
-      // Step 2: Copy caption
-      copySocialCaption();
-      
-      // Step 3: Open Instagram
-      window.location.href = 'https://www.instagram.com/';
-      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied — Opening Instagram...');
+      executeSocialPlatformShare('https://www.instagram.com/', 'Instagram post');
     }
 
-    /** BUTTON 4 — SHARE... (NATIVE OPERATING SYSTEM SHARE SHEET ONLY) */
+    /** PLATFORM 4 — Native Share... */
     async function shareNative() {
       const caption = getCaptionText();
-      if (navigator.share) {
-        const shareData = {
-          title: 'Hacker House Goa 2026',
-          text: caption
-        };
-        if (preparedShareFile && navigator.canShare && navigator.canShare({ files: [preparedShareFile] })) {
-          shareData.files = [preparedShareFile];
-        }
-        try {
-          await navigator.share(shareData);
-          showToast(container, 'READY TO SHARE ✓');
-          return;
-        } catch (err) {
-          if (err?.name === 'AbortError') return;
-        }
-      }
+      const sharedNatively = await attemptNativeFileShare(caption);
+      if (sharedNatively) return;
 
-      // Fallback if native share is not supported
-      downloadIdentityFrame();
+      // Fallback if native file share is unsupported
+      await downloadIdentityFrame();
       copySocialCaption();
-      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied');
+      showToast(
+        container,
+        `📸 Frame downloaded\n📝 Caption copied to clipboard`
+      );
     }
 
     container.querySelector('#btn-share-x')?.addEventListener('click', (e) => { e.preventDefault(); shareToX(); });
