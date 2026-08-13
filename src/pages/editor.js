@@ -180,7 +180,7 @@ export async function renderEditor(container) {
           <!-- Download Action Footer -->
           <footer class="controls-footer">
             <button class="btn-export" id="btn-download" type="button">
-              <span id="export-label">⬇ Download Poster PNG</span>
+              <span id="export-label">⬇ Download Identity Frame</span>
             </button>
           </footer>
 
@@ -673,30 +673,77 @@ export async function renderEditor(container) {
       }
     });
 
-    async function handleSocialShare(platform) {
-      const blob = await renderCurrentCardToBlob();
-      if (!blob || blob.size === 0) {
-        showToast(container, 'SHARE FAILED — TRY DOWNLOAD PNG');
-        return;
-      }
-
-      const filename = getSanitizedFilename();
-      const file = new File([blob], filename, { type: 'image/png' });
-
-      if (file.size === 0 || file.type !== 'image/png') {
-        showToast(container, 'SHARE FAILED — TRY DOWNLOAD PNG');
-        return;
-      }
-
+    async function shareToX() {
       const caption = getCaptionText();
+      if (navigator.clipboard) {
+        try { await navigator.clipboard.writeText(caption); } catch (e) {}
+      }
+      const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(caption)}`;
+      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      showToast(container, 'FRAME READY ✓ — Opening X post composer...');
+    }
 
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    async function shareToWhatsApp() {
+      const caption = getCaptionText();
+      if (navigator.clipboard) {
+        try { await navigator.clipboard.writeText(caption); } catch (e) {}
+      }
+      const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`;
+      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      showToast(container, 'FRAME READY ✓ — Opening WhatsApp...');
+    }
+
+    async function shareToInstagram() {
+      const caption = getCaptionText();
+      if (navigator.clipboard) {
+        try { await navigator.clipboard.writeText(caption); } catch (e) {}
+      }
+
+      // Attempt native file sharing on supported mobile browsers
+      try {
+        const blob = await renderCurrentCardToBlob();
+        if (blob && blob.size > 0) {
+          const filename = getSanitizedFilename();
+          const file = new File([blob], filename, { type: 'image/png' });
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'Hacker House Goa 2026 Identity Frame',
+              text: caption,
+              files: [file]
+            });
+            showToast(container, 'FRAME SHARED ✓');
+            return;
+          }
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+
+      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+      showToast(container, 'CAPTION COPIED ✓ — Upload your identity frame on Instagram!');
+    }
+
+    async function shareNative() {
+      const caption = getCaptionText();
+      if (navigator.clipboard) {
+        try { await navigator.clipboard.writeText(caption); } catch (e) {}
+      }
+
+      if (navigator.share) {
         try {
-          await navigator.share({
-            title: 'HH Goa 2026 Builder Identity',
-            text: caption,
-            files: [file]
-          });
+          const shareData = {
+            title: 'Hacker House Goa 2026',
+            text: caption
+          };
+          const blob = await renderCurrentCardToBlob();
+          if (blob && blob.size > 0) {
+            const filename = getSanitizedFilename();
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              shareData.files = [file];
+            }
+          }
+          await navigator.share(shareData);
           showToast(container, 'FRAME SHARED ✓');
           return;
         } catch (err) {
@@ -704,32 +751,13 @@ export async function renderEditor(container) {
         }
       }
 
-      if (navigator.clipboard) {
-        try { await navigator.clipboard.writeText(caption); } catch (e) {}
-      }
-
-      if (platform === 'x') {
-        downloadBlobFile(blob, filename);
-        window.open(`https://x.com/intent/post?text=${encodeURIComponent(caption)}`, '_blank');
-        showToast(container, 'X POST READY ✓ — Attach the downloaded frame');
-      } else if (platform === 'whatsapp') {
-        downloadBlobFile(blob, filename);
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`, '_blank');
-        showToast(container, 'FRAME READY ✓ — IMAGE DOWNLOADED');
-      } else if (platform === 'instagram') {
-        downloadBlobFile(blob, filename);
-        window.open('https://www.instagram.com/', '_blank');
-        showToast(container, 'FRAME READY ✓ — Caption copied, attach frame!');
-      } else {
-        downloadBlobFile(blob, filename);
-        showToast(container, 'FRAME READY ✓ — IMAGE DOWNLOADED');
-      }
+      showToast(container, 'CAPTION COPIED ✓ — Link & caption copied to clipboard!');
     }
 
-    container.querySelector('#btn-share-x')?.addEventListener('click', () => handleSocialShare('x'));
-    container.querySelector('#btn-share-wa')?.addEventListener('click', () => handleSocialShare('whatsapp'));
-    container.querySelector('#btn-share-ig')?.addEventListener('click', () => handleSocialShare('instagram'));
-    container.querySelector('#btn-share-native')?.addEventListener('click', () => handleSocialShare('native'));
+    container.querySelector('#btn-share-x')?.addEventListener('click', (e) => { e.preventDefault(); shareToX(); });
+    container.querySelector('#btn-share-wa')?.addEventListener('click', (e) => { e.preventDefault(); shareToWhatsApp(); });
+    container.querySelector('#btn-share-ig')?.addEventListener('click', (e) => { e.preventDefault(); shareToInstagram(); });
+    container.querySelector('#btn-share-native')?.addEventListener('click', (e) => { e.preventDefault(); shareNative(); });
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -742,7 +770,7 @@ export async function renderEditor(container) {
       return `hh-goa-2026-team-${sanitized || 'crew'}.png`;
     }
     const sanitized = (state.individual.name || 'builder').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
-    return `hh-goa-2026-${sanitized || 'poster'}.png`;
+    return `hh-goa-2026-${sanitized || 'frame'}.png`;
   }
 
   async function triggerDownload() {
@@ -754,7 +782,7 @@ export async function renderEditor(container) {
         return;
       }
       downloadBlobFile(blob, filename);
-      showToast(container, 'POSTER DOWNLOADED ✓');
+      showToast(container, 'IDENTITY FRAME SAVED ✓');
     } catch (err) {
       console.error('Export error caught:', err);
       showToast(container, '⚠ EXPORT FAILED. Please try again.');
