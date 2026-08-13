@@ -719,7 +719,7 @@ export async function renderEditor(container) {
         return;
       }
 
-      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+      window.location.href = 'https://www.instagram.com/';
       showToast(container, 'CAPTION COPIED ✓ — Upload your identity frame on Instagram!');
     }
 
