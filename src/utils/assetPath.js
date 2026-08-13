@@ -15,6 +15,6 @@ export function getAssetUrl(path) {
     return path;
   }
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  const baseUrl = import.meta.env.BASE_URL || '/';
+  const baseUrl = (typeof import.meta !== 'undefined' && import.meta?.env?.BASE_URL) ? import.meta.env.BASE_URL : '/';
   return baseUrl.endsWith('/') ? `${baseUrl}${cleanPath}` : `${baseUrl}/${cleanPath}`;
 }

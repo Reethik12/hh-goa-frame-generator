@@ -234,7 +234,7 @@ export async function renderEditor(container) {
 
   /** Authoritative Render Update Trigger */
   async function updateAll() {
-    if (state.mode === 'team' && state.crewSize === 2) {
+    if (state.mode === 'team') {
       canvasWrapper?.classList.add('is-landscape');
     } else {
       canvasWrapper?.classList.remove('is-landscape');
