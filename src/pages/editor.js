@@ -232,6 +232,20 @@ export async function renderEditor(container) {
     };
   }
 
+  let preparedShareFile = null;
+
+  async function updatePreparedShareFile() {
+    try {
+      const blob = await renderCurrentCardToBlob();
+      if (blob && blob.size > 0) {
+        const filename = getSanitizedFilename();
+        preparedShareFile = new File([blob], filename, { type: 'image/png' });
+      }
+    } catch (e) {
+      preparedShareFile = null;
+    }
+  }
+
   /** Authoritative Render Update Trigger */
   async function updateAll() {
     if (state.mode === 'team') {
@@ -248,6 +262,9 @@ export async function renderEditor(container) {
     if (captionPreview) {
       captionPreview.value = generateCaption(getIdentity(), state.captionTemplateIndex);
     }
+
+    // Pre-calculate share file in background so social share handlers can execute synchronously
+    updatePreparedShareFile();
   }
 
   /** Render Controls Panel UI based on active subtab */
@@ -673,84 +690,60 @@ export async function renderEditor(container) {
       }
     });
 
-    async function shareToX() {
+    function shareToX() {
       const caption = getCaptionText();
-      if (navigator.clipboard) {
-        try { await navigator.clipboard.writeText(caption); } catch (e) {}
-      }
       const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(caption)}`;
       window.open(shareUrl, '_blank', 'noopener,noreferrer');
       showToast(container, 'FRAME READY ✓ — Opening X post composer...');
     }
 
-    async function shareToWhatsApp() {
+    function shareToWhatsApp() {
       const caption = getCaptionText();
-      if (navigator.clipboard) {
-        try { await navigator.clipboard.writeText(caption); } catch (e) {}
-      }
       const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`;
       window.open(shareUrl, '_blank', 'noopener,noreferrer');
       showToast(container, 'FRAME READY ✓ — Opening WhatsApp...');
     }
 
-    async function shareToInstagram() {
+    function shareToInstagram() {
       const caption = getCaptionText();
-      if (navigator.clipboard) {
-        try { await navigator.clipboard.writeText(caption); } catch (e) {}
-      }
-
-      // Attempt native file sharing on supported mobile browsers
-      try {
-        const blob = await renderCurrentCardToBlob();
-        if (blob && blob.size > 0) {
-          const filename = getSanitizedFilename();
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: 'Hacker House Goa 2026 Identity Frame',
-              text: caption,
-              files: [file]
-            });
-            showToast(container, 'FRAME SHARED ✓');
-            return;
-          }
-        }
-      } catch (err) {
-        if (err.name === 'AbortError') return;
+      if (navigator.share && navigator.canShare && preparedShareFile && navigator.canShare({ files: [preparedShareFile] })) {
+        navigator.share({
+          title: 'Hacker House Goa 2026',
+          text: caption,
+          files: [preparedShareFile]
+        }).then(() => {
+          showToast(container, 'FRAME SHARED ✓');
+        }).catch((err) => {
+          if (err?.name !== 'AbortError') console.error('Share failed:', err);
+        });
+        return;
       }
 
       window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       showToast(container, 'CAPTION COPIED ✓ — Upload your identity frame on Instagram!');
     }
 
-    async function shareNative() {
+    function shareNative() {
       const caption = getCaptionText();
-      if (navigator.clipboard) {
-        try { await navigator.clipboard.writeText(caption); } catch (e) {}
-      }
-
       if (navigator.share) {
-        try {
-          const shareData = {
-            title: 'Hacker House Goa 2026',
-            text: caption
-          };
-          const blob = await renderCurrentCardToBlob();
-          if (blob && blob.size > 0) {
-            const filename = getSanitizedFilename();
-            const file = new File([blob], filename, { type: 'image/png' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              shareData.files = [file];
-            }
-          }
-          await navigator.share(shareData);
-          showToast(container, 'FRAME SHARED ✓');
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
+        const shareData = {
+          title: 'Hacker House Goa 2026',
+          text: caption
+        };
+        if (preparedShareFile && navigator.canShare && navigator.canShare({ files: [preparedShareFile] })) {
+          shareData.files = [preparedShareFile];
         }
+        navigator.share(shareData).then(() => {
+          showToast(container, 'FRAME SHARED ✓');
+        }).catch((err) => {
+          if (err?.name !== 'AbortError') console.error('Native share failed:', err);
+        });
+        return;
       }
 
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(caption).catch(() => {});
+      }
       showToast(container, 'CAPTION COPIED ✓ — Link & caption copied to clipboard!');
     }
 
