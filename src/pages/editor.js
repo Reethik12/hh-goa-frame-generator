@@ -233,16 +233,19 @@ export async function renderEditor(container) {
   }
 
   let preparedShareFile = null;
+  let preparedShareBlob = null;
 
   async function updatePreparedShareFile() {
     try {
       const blob = await renderCurrentCardToBlob();
       if (blob && blob.size > 0) {
+        preparedShareBlob = blob;
         const filename = getSanitizedFilename();
         preparedShareFile = new File([blob], filename, { type: 'image/png' });
       }
     } catch (e) {
       preparedShareFile = null;
+      preparedShareBlob = null;
     }
   }
 
@@ -690,40 +693,80 @@ export async function renderEditor(container) {
       }
     });
 
-    function shareToX() {
+    /** Helper: Copy caption to clipboard */
+    function copySocialCaption() {
+      const caption = getCaptionText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(caption).catch(() => {});
+      }
+    }
+
+    /** Helper: Download current identity frame PNG */
+    async function downloadIdentityFrame() {
+      try {
+        const filename = getSanitizedFilename();
+        if (preparedShareBlob && preparedShareBlob.size > 0) {
+          downloadBlobFile(preparedShareBlob, filename);
+          return true;
+        }
+        const blob = await renderCurrentCardToBlob();
+        if (blob && blob.size > 0) {
+          downloadBlobFile(blob, filename);
+          return true;
+        }
+      } catch (err) {
+        console.error('Frame download error:', err);
+      }
+      return false;
+    }
+
+    /** BUTTON 1 — X SHARE */
+    async function shareToX() {
       const caption = getCaptionText();
       const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(caption)}`;
+      
+      // Step 1: Download frame
+      downloadIdentityFrame();
+      
+      // Step 2: Copy caption
+      copySocialCaption();
+      
+      // Step 3: Open X composer
       window.location.href = shareUrl;
-      showToast(container, 'FRAME READY ✓ — Opening X post composer...');
+      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied — Opening X...');
     }
 
-    function shareToWhatsApp() {
+    /** BUTTON 2 — WHATSAPP */
+    async function shareToWhatsApp() {
       const caption = getCaptionText();
       const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`;
+      
+      // Step 1: Download frame
+      downloadIdentityFrame();
+      
+      // Step 2: Copy caption
+      copySocialCaption();
+      
+      // Step 3: Open WhatsApp
       window.location.href = shareUrl;
-      showToast(container, 'FRAME READY ✓ — Opening WhatsApp...');
+      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied — Opening WhatsApp...');
     }
 
-    function shareToInstagram() {
-      const caption = getCaptionText();
-      if (navigator.share && navigator.canShare && preparedShareFile && navigator.canShare({ files: [preparedShareFile] })) {
-        navigator.share({
-          title: 'Hacker House Goa 2026',
-          text: caption,
-          files: [preparedShareFile]
-        }).then(() => {
-          showToast(container, 'FRAME SHARED ✓');
-        }).catch((err) => {
-          if (err?.name !== 'AbortError') console.error('Share failed:', err);
-        });
-        return;
-      }
-
+    /** BUTTON 3 — INSTAGRAM (NO Web Share sheet, direct download + copy + launch) */
+    async function shareToInstagram() {
+      // Step 1: Download frame
+      downloadIdentityFrame();
+      
+      // Step 2: Copy caption
+      copySocialCaption();
+      
+      // Step 3: Open Instagram
       window.location.href = 'https://www.instagram.com/';
-      showToast(container, 'CAPTION COPIED ✓ — Upload your identity frame on Instagram!');
+      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied — Opening Instagram...');
     }
 
-    function shareNative() {
+    /** BUTTON 4 — SHARE... (NATIVE OPERATING SYSTEM SHARE SHEET ONLY) */
+    async function shareNative() {
       const caption = getCaptionText();
       if (navigator.share) {
         const shareData = {
@@ -733,18 +776,19 @@ export async function renderEditor(container) {
         if (preparedShareFile && navigator.canShare && navigator.canShare({ files: [preparedShareFile] })) {
           shareData.files = [preparedShareFile];
         }
-        navigator.share(shareData).then(() => {
-          showToast(container, 'FRAME SHARED ✓');
-        }).catch((err) => {
-          if (err?.name !== 'AbortError') console.error('Native share failed:', err);
-        });
-        return;
+        try {
+          await navigator.share(shareData);
+          showToast(container, 'READY TO SHARE ✓');
+          return;
+        } catch (err) {
+          if (err?.name === 'AbortError') return;
+        }
       }
 
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(caption).catch(() => {});
-      }
-      showToast(container, 'CAPTION COPIED ✓ — Link & caption copied to clipboard!');
+      // Fallback if native share is not supported
+      downloadIdentityFrame();
+      copySocialCaption();
+      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓ — Caption copied');
     }
 
     container.querySelector('#btn-share-x')?.addEventListener('click', (e) => { e.preventDefault(); shareToX(); });
@@ -768,14 +812,12 @@ export async function renderEditor(container) {
 
   async function triggerDownload() {
     try {
-      const blob = await renderCurrentCardToBlob();
-      const filename = getSanitizedFilename();
-      if (!blob || blob.size === 0) {
+      const success = await downloadIdentityFrame();
+      if (!success) {
         showToast(container, '⚠ EXPORT FAILED. Please try again.');
         return;
       }
-      downloadBlobFile(blob, filename);
-      showToast(container, 'IDENTITY FRAME SAVED ✓');
+      showToast(container, 'IDENTITY FRAME DOWNLOADED ✓');
     } catch (err) {
       console.error('Export error caught:', err);
       showToast(container, '⚠ EXPORT FAILED. Please try again.');
