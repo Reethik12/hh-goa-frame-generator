@@ -533,7 +533,7 @@ export function drawQRCodeOnCanvas(ctx, text, x, y, sizePx, options = {}) {
   } catch (err) {
     console.warn('QR matrix generation warning, trying essential ID fallback:', err);
     try {
-      matrix = generateQRMatrix('HH-GOA-2026\nSCAN VERIFIED');
+      matrix = generateQRMatrix('https://hh-goa-frame-generator-tau.vercel.app/');
     } catch (e2) {
       matrix = null;
     }

@@ -88,7 +88,7 @@ export function createTeamPayload(data = {}) {
  * @returns {string}
  */
 export function formatQRPayload(identity) {
-  return 'https://reethik12.github.io/hh-goa-frame-generator/';
+  return 'https://hh-goa-frame-generator-tau.vercel.app/';
 }
 
 /**
