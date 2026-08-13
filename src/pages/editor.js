@@ -609,41 +609,66 @@ export async function renderEditor(container) {
     });
   }
 
-  // ── Helper to render current frame to PNG Blob ──
-  async function renderCurrentCardToBlob() {
+  function dataUrlToBlob(canvas) {
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      if (!dataUrl || !dataUrl.startsWith('data:image/png')) return null;
+      const arr = dataUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+      return new Blob([u8arr], { type: mime });
+    } catch (e) {
+      console.warn('dataUrlToBlob failed:', e);
+      return null;
+    }
+  }
+
+  function getBlobFromCanvas(canvas) {
     return new Promise((resolve) => {
+      if (!canvas) return resolve(null);
       try {
-        const exportCanvas = document.createElement('canvas');
-        renderCardCanvas(exportCanvas, getCanvasData(), { isExport: true }).then(() => {
-          if (exportCanvas.toBlob) {
-            exportCanvas.toBlob((blob) => {
-              if (blob && blob.size > 0) resolve(blob);
-              else resolve(null);
-            }, 'image/png');
-          } else {
-            const dataUrl = exportCanvas.toDataURL('image/png');
-            if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
-              resolve(null); return;
+        if (canvas.toBlob) {
+          canvas.toBlob((blob) => {
+            if (blob && blob.size > 0) {
+              resolve(blob);
+            } else {
+              resolve(dataUrlToBlob(canvas));
             }
-            const arr = dataUrl.split(',');
-            const mime = arr[0].match(/:(.*?);/)[1];
-            const bstr = atob(arr[1]);
-            let n = bstr.length;
-            const u8arr = new Uint8Array(n);
-            while (n--) { u8arr[n] = bstr.charCodeAt(n); }
-            const blob = new Blob([u8arr], { type: mime });
-            if (blob && blob.size > 0) resolve(blob);
-            else resolve(null);
-          }
-        }).catch(err => {
-          console.error('Failed renderCardCanvas in blob helper:', err);
-          resolve(null);
-        });
+          }, 'image/png');
+        } else {
+          resolve(dataUrlToBlob(canvas));
+        }
       } catch (err) {
-        console.error('Failed to render current card to blob:', err);
-        resolve(null);
+        console.warn('getBlobFromCanvas failed:', err);
+        resolve(dataUrlToBlob(canvas));
       }
     });
+  }
+
+  // ── Helper to render current frame to PNG Blob ──
+  async function renderCurrentCardToBlob() {
+    try {
+      const exportCanvas = document.createElement('canvas');
+      await renderCardCanvas(exportCanvas, getCanvasData(), { isExport: true });
+      const blob = await getBlobFromCanvas(exportCanvas);
+      if (blob && blob.size > 0) return blob;
+    } catch (err) {
+      console.warn('Failed exportCanvas render, falling back to previewCanvas:', err);
+    }
+
+    try {
+      if (previewCanvas) {
+        const blob = await getBlobFromCanvas(previewCanvas);
+        if (blob && blob.size > 0) return blob;
+      }
+    } catch (err) {
+      console.error('Failed previewCanvas blob fallback:', err);
+    }
+
+    return null;
   }
 
   function downloadBlobFile(blob, filename) {
@@ -655,6 +680,22 @@ export async function renderEditor(container) {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  function downloadDataUrlFile(dataUrl, filename) {
+    if (!dataUrl || !dataUrl.startsWith('data:image/')) return false;
+    try {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return true;
+    } catch (e) {
+      console.error('DataURL download link failed:', e);
+      return false;
+    }
   }
 
   // ── Common Caption & Social Share Listeners ──
@@ -752,6 +793,15 @@ export async function renderEditor(container) {
         if (blob && blob.size > 0) {
           downloadBlobFile(blob, filename);
           return true;
+        }
+
+        // Direct DataURL fallback from previewCanvas
+        if (previewCanvas) {
+          const dataUrl = previewCanvas.toDataURL('image/png');
+          if (dataUrl && dataUrl.length > 100) {
+            downloadDataUrlFile(dataUrl, filename);
+            return true;
+          }
         }
       } catch (err) {
         console.error('Frame download error:', err);

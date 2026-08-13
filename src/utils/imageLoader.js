@@ -26,7 +26,7 @@ export function loadImage(src) {
 
   return new Promise((resolve, reject) => {
     const img = new Image();
-    if (resolvedSrc.startsWith('http://') || resolvedSrc.startsWith('https://')) {
+    if (!resolvedSrc.startsWith('data:')) {
       img.crossOrigin = 'anonymous';
     }
     img.onload = () => {
