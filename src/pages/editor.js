@@ -693,14 +693,14 @@ export async function renderEditor(container) {
     function shareToX() {
       const caption = getCaptionText();
       const shareUrl = `https://x.com/intent/post?text=${encodeURIComponent(caption)}`;
-      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      window.location.href = shareUrl;
       showToast(container, 'FRAME READY ✓ — Opening X post composer...');
     }
 
     function shareToWhatsApp() {
       const caption = getCaptionText();
       const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`;
-      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      window.location.href = shareUrl;
       showToast(container, 'FRAME READY ✓ — Opening WhatsApp...');
     }
 
