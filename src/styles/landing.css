@@ -48,7 +48,8 @@
   background-image: url('/assets/backgrounds/Sun rise.png');
   background-size: cover;
   background-position: center;
-  display: none; /* JS toggles this */
+  display: none;
+  /* JS toggles this */
   pointer-events: none;
 }
 
@@ -66,13 +67,11 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(5, 5, 5, 0.72) 0%,
-    rgba(5, 5, 5, 0.55) 35%,
-    rgba(5, 5, 5, 0.50) 55%,
-    rgba(5, 5, 5, 0.82) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(5, 5, 5, 0.72) 0%,
+      rgba(5, 5, 5, 0.55) 35%,
+      rgba(5, 5, 5, 0.50) 55%,
+      rgba(5, 5, 5, 0.82) 100%);
 }
 
 /* ── Film grain texture ── */
@@ -94,10 +93,23 @@
 }
 
 @keyframes grainShift {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-2px, 1px); }
-  50% { transform: translate(1px, -2px); }
-  75% { transform: translate(-1px, 2px); }
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(-2px, 1px);
+  }
+
+  50% {
+    transform: translate(1px, -2px);
+  }
+
+  75% {
+    transform: translate(-1px, 2px);
+  }
 }
 
 /* ── Main Content ─────────────────────────────────────────── */
@@ -167,7 +179,8 @@
 .hero-headline {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: var(--type-display-xl);
+  font-size: 2.8rem;
+  /* ← CHANGE THIS VALUE */
   line-height: 1.05;
   color: var(--hh-white);
   letter-spacing: -0.01em;
@@ -312,8 +325,13 @@
 }
 
 @keyframes tickerScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .deco-wave {
@@ -383,13 +401,31 @@
 }
 
 @keyframes starFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
-.deco-star.pos-1 { top: 18%; left: 8%; }
-.deco-star.pos-2 { top: 30%; right: 12%; }
-.deco-star.pos-3 { bottom: 25%; left: 15%; }
+.deco-star.pos-1 {
+  top: 18%;
+  left: 8%;
+}
+
+.deco-star.pos-2 {
+  top: 30%;
+  right: 12%;
+}
+
+.deco-star.pos-3 {
+  bottom: 25%;
+  left: 15%;
+}
 
 /* ── Zigzag micro border ── */
 .deco-zigzag {
@@ -507,10 +543,25 @@
     height: 14px;
   }
 
-  .deco-corner-marker.top-left { top: var(--space-3); left: var(--space-3); }
-  .deco-corner-marker.top-right { top: var(--space-3); right: var(--space-3); }
-  .deco-corner-marker.bottom-left { bottom: var(--space-3); left: var(--space-3); }
-  .deco-corner-marker.bottom-right { bottom: var(--space-3); right: var(--space-3); }
+  .deco-corner-marker.top-left {
+    top: var(--space-3);
+    left: var(--space-3);
+  }
+
+  .deco-corner-marker.top-right {
+    top: var(--space-3);
+    right: var(--space-3);
+  }
+
+  .deco-corner-marker.bottom-left {
+    bottom: var(--space-3);
+    left: var(--space-3);
+  }
+
+  .deco-corner-marker.bottom-right {
+    bottom: var(--space-3);
+    right: var(--space-3);
+  }
 }
 
 @media (max-width: 480px) {
